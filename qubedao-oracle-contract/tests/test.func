@@ -1,0 +1,92 @@
+() init_data_for_oracle() impure {
+        set_data(
+                begin_cell()
+                        .store_uint(0, 64)
+                        .store_uint(now(), 64)
+                        .store_slice("EQB3zt_w3eJPH_G_wh1vMz3uBMhfxrUc1BgXOI30dr76KAch"a)
+                        .store_slice("EQDAI5ysKXW5UVnsQoNasRTsD1F8Em1RerjN9dwX4bDsXKTS"a)
+                .end_cell()
+        );
+}
+
+
+() init_data_for_client() impure {
+        set_data(
+                begin_cell()
+                        .store_slice("EQB1BIFXrHRZL_SwW1dSaQ-6Gj51dGINydHgli0kJLdfIeYB"a)
+                .end_cell()
+        );
+}
+
+int test_start_client_first_client() {
+        init_data_for_client();
+        var msg_body = begin_cell()
+                .store_uint(15, 32)
+        .end_cell();
+        var msg = begin_cell()
+                .store_uint(0x18, 6)
+                .store_slice("EQDFbI9DnUkc1u1DIdbssp_YsIPk6dHPhn79oqELDwZ5m7DY"a)
+                .store_grams(0)
+                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+                .store_ref(msg_body)
+                .store_slice(begin_parse(msg_body))
+        .end_cell();
+
+        var (gas_used, stack) = invoke_method(recv_internal, [100000, 0, msg, msg_body.begin_parse()]);
+        [cell msg_from_client, slice msg_body_from_client] = stack;
+        init_data_for_oracle();
+        var (gas_used2, stack) = invoke_method(recv_internal, [100000, 100000, msg_from_client, msg_body_from_client]);
+        [cell msg_from_oracle, slice msg_body_from_oracle] = stack;
+        init_data_for_client();
+        var (gas_used3, stack) = invoke_method(recv_internal, [100000, 0, msg_from_oracle, msg_body_from_oracle]);
+
+        return gas_used + gas_used2 + gas_used3;
+}
+
+int test_start_oracle_first_oracle(){
+        init_data_for_oracle();
+        var msg_body_in_msg_body = begin_cell()
+                .store_uint(15, 32)
+        .end_cell();
+        var msg_body = begin_cell()
+                .store_slice("EQDBdyKIXYIlhCKls16bjQPExjeKVdU2zglzxX3GDR3XOFy9"a)
+                .store_ref(msg_body_in_msg_body)
+        .end_cell();
+        var msg = begin_cell()
+                .store_uint(0x18, 6)
+                .store_slice("EQDFbI9DnUkc1u1DIdbssp_YsIPk6dHPhn79oqELDwZ5m7DY"a)
+                .store_grams(100000)
+                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+                .store_ref(msg_body)
+                .store_slice(msg_body.begin_parse())
+        .end_cell();
+
+        var (gas_used, stack) = invoke_method(recv_internal, [100000, 100000, msg, msg_body.begin_parse()]);
+        [cell msg_from_oracle, slice msg_body_from_oracle] = stack;
+
+        var (gas_used1, stack) = invoke_method(recv_internal, [100000, 0, msg_from_oracle, msg_body_from_oracle]);
+        return gas_used + gas_used1;
+}
+
+int __test_new_price(){
+        init_data_for_oracle();
+        var msg_body = begin_cell()
+                .store_uint(1, 32)
+                .store_uint(0, 64)
+                .store_uint(2, 32)
+                .store_uint(1676000000, 64)
+                .store_uint(1676500000, 64)
+                .store_uint(1675286970, 64)
+        .end_cell();
+        ;;~dump(1661704970 - 1669170920);
+        var msg = begin_cell()
+                .store_uint(0x18, 6)
+                .store_slice("EQDAI5ysKXW5UVnsQoNasRTsD1F8Em1RerjN9dwX4bDsXKTS"a)
+                .store_grams(100000)
+                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+                .store_ref(msg_body)
+                .store_slice(msg_body.begin_parse())
+        .end_cell();
+        var (gas_used, stack) = invoke_method(recv_internal, [100000, 100000, msg, msg_body.begin_parse(), "EQDAI5ysKXW5UVnsQoNasRTsD1F8Em1RerjN9dwX4bDsXKTS"a]);
+        return gas_used;
+}

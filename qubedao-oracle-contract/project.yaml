@@ -1,0 +1,8 @@
+contract:
+  data: fift/data.fif
+  func:
+    - func/core.func
+    #- func/simple-client.func ;; for test
+  tests:
+    - tests/test.func
+

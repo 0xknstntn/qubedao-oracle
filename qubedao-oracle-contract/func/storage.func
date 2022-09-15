@@ -1,0 +1,12 @@
+(int, int, slice, slice) storage::load_data() inline {
+        slice ds = get_data().begin_parse();
+        return (ds~load_uint(64), ds~load_uint(64), ds~load_msg_addr(), ds~load_msg_addr());
+}
+
+() storage::save_price(int price, int time, slice admin, slice provider) impure inline {
+        set_data(begin_cell().store_uint(price, 64).store_uint(now(), 64).store_slice(admin).store_slice(provider).end_cell());
+}
+
+() admin::save_data(int price, int time, slice admin, slice provider) impure inline {
+        set_data(begin_cell().store_uint(price, 64).store_uint(time, 64).store_slice(admin).store_slice(provider).end_cell());
+}

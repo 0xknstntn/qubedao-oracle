@@ -1,0 +1,66 @@
+{-
+	@title: qubedao-oracle core
+	@custom: version 1.0
+	@custom: forked from https://github.com/ton-link/ton-link-contract
+	@author: Konstantin Klyuchnikov (knstntn.asuoki.eth)
+-}
+
+#include "storage.func";
+#include "utils.func";
+#include "get.func";
+
+;;(cell, slice) recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body, slice sender_address) impure { ;; for test
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+	(int price, int time, slice admin, slice provider) = storage::load_data();
+	slice sender_address = utils::parse_sender_address(in_msg_full);
+	if(equal_slices(provider, sender_address)){
+		int op = in_msg_body~load_uint(32);
+		int query_id = in_msg_body~load_uint(64);
+		if(op == 1){
+			int index = in_msg_body~load_uint(32);
+			int old_price = in_msg_body~load_uint(64);
+			slice ful_msg = in_msg_body;
+			repeat(index){
+				int next_price = ful_msg~load_uint(64);
+				if(next_price > old_price) {
+					old_price = next_price;
+				}
+			}
+			repeat(index){
+				int new_price = in_msg_body~load_uint(64);
+				int difference = old_price - new_price;
+				if(((difference > 1000000) | (difference < -1000000)) & ((difference < 200000) | (difference > -200000))) {
+					old_price = new_price;
+					~dump(1);
+				}
+			}
+			storage::save_price(old_price, now(), admin, provider);
+			;;return (utils::get_null_cell(), utils::get_null_slice()); ;; for test
+			return ();
+		}
+	} else {
+		throw_unless(877, (now() - time) <= 20);
+		slice who_send = in_msg_body~load_msg_addr();
+		cell body = in_msg_body~load_ref();
+		cell msg_body = begin_cell()
+			.store_slice(who_send)
+			.store_uint(now(), 64)
+			.store_grams(msg_value)
+			.store_uint(price, 64)
+			.store_ref(body)
+		.end_cell();
+		var msg = begin_cell()
+			.store_uint(0x18, 6)
+			.store_slice(sender_address)
+			.store_grams(0)
+			.store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+			.store_ref(msg_body)
+			.store_slice(msg_body.begin_parse())
+		.end_cell();
+		send_raw_message(msg, 64);
+		return ();
+		;;return (msg, begin_parse(msg_body)); ;; for test
+	}
+	;;return (utils::get_null_cell(), utils::get_null_slice()); ;; for test
+	throw(0xFFFFFF);
+}

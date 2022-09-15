@@ -1,0 +1,14 @@
+int get_last_price() method_id {
+        (int price, int time, slice admin, slice provider) = storage::load_data();
+        return price;
+}
+
+int get_last_update() method_id {
+        (int price, int time, slice admin, slice provider) = storage::load_data();
+        return time;
+}
+
+slice get_provider() method_id {
+        (int price, int time, slice admin, slice provider) = storage::load_data();
+        return provider;
+}
