@@ -31,7 +31,6 @@
 				int difference = old_price - new_price;
 				if(((difference > 1000000) | (difference < -1000000)) & ((difference < 200000) | (difference > -200000))) {
 					old_price = new_price;
-					~dump(1);
 				}
 			}
 			storage::save_price(old_price, now(), admin, provider);
