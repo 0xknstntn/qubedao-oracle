@@ -73,10 +73,13 @@ int __test_new_price(){
         var msg_body = begin_cell()
                 .store_uint(1, 32)
                 .store_uint(0, 64)
-                .store_uint(2, 32)
-                .store_uint(1676000000, 64)
-                .store_uint(1676500000, 64)
-                .store_uint(1675286970, 64)
+                .store_uint(3, 32)
+                .store_uint(1676282191, 64)
+                .store_uint(1632500000, 64)
+                .store_uint(1675286971, 64)
+                .store_uint(1775286970, 64)
+                .store_uint(1675200000, 64)
+                .store_uint(1697009900, 64)
         .end_cell();
         ;;~dump(1661704970 - 1669170920);
         var msg = begin_cell()
