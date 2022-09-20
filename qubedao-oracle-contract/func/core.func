@@ -9,11 +9,11 @@
 #include "utils.func";
 #include "get.func";
 
-(cell, slice) recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body, slice sender_address) impure { ;; for test
-;;() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+;;(cell, slice) recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body, slice sender_address) impure { ;; for test
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
 	(int price, int time, slice admin, slice provider) = storage::load_data();
 	slice sender_address = utils::parse_sender_address(in_msg_full);
-	;;if(equal_slices(provider, sender_address)){
+	if(equal_slices(provider, sender_address)){
 		int op = in_msg_body~load_uint(32);
 		int query_id = in_msg_body~load_uint(64);
 		if(op == 1){
@@ -34,12 +34,12 @@
 				}-}
 
 			}
-			~dump(price / index);
-			storage::save_price(price, now(), admin, provider);
-			return (utils::get_null_cell(), utils::get_null_slice()); ;; for test
-			;;return ();
+			;;~dump(price / index);
+			storage::save_price((price / index), now(), admin, provider);
+			;;return (utils::get_null_cell(), utils::get_null_slice()); ;; for test
+			return ();
 		}
-	{-} else {
+	} else {
 		throw_unless(877, (now() - time) <= 20);
 		slice who_send = in_msg_body~load_msg_addr();
 		cell body = in_msg_body~load_ref();
@@ -59,9 +59,9 @@
 			.store_slice(msg_body.begin_parse())
 		.end_cell();
 		send_raw_message(msg, 64);
-		;;return ();
-		return (msg, begin_parse(msg_body)); ;; for test
-	}-}
-	return (utils::get_null_cell(), utils::get_null_slice()); ;; for test
-	;;throw(0xFFFFFF);
+		return ();
+		;;return (msg, begin_parse(msg_body)); ;; for test
+	}
+	;;return (utils::get_null_cell(), utils::get_null_slice()); ;; for test
+	throw(0xFFFFFF);
 }
