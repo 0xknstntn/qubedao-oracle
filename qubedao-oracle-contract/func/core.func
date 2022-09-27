@@ -29,7 +29,6 @@
 		int op = in_msg_body~load_uint(32);
 		int query_id = in_msg_body~load_uint(64);
 		if(op == 1){
-			in_msg_body~load_uint(32);
 			int price0 = in_msg_body~load_uint(64);
 			int price1 = in_msg_body~load_uint(64);
 			int price2 = in_msg_body~load_uint(64);
