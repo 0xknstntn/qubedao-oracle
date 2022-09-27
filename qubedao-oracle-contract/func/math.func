@@ -1,0 +1,26 @@
+forall X -> (tuple, X) ~tpop(tuple t) asm "TPOP";
+int get_min(tuple a, int index){
+        int min = a~tpop();
+        repeat(index - 1){
+                int temp = a~tpop();
+                if(temp < min) { min = temp; }
+        }
+        return min;
+}
+
+int get_price(tuple a){
+        int price0 = a.first(); 
+        int price1 = a.second();
+        int price2 = a.third();
+        int price3 = a.fourth();
+        int da = abs(price0 - ((price1 + price2 + price3) / 3));
+        int db = abs(price1 - ((price0 + price2 + price3) / 3));
+        int dc = abs(price2 - ((price0 + price1 + price3) / 3));
+        int dd = abs(price3 - ((price0 + price1 + price2) / 3));
+
+        int min = get_min(unsafe_tuple([da, db, dc, dd]), 4);
+        if(da == min) { return price0; }
+        if(db == min) { return price1; }
+        if(dc == min) { return price2; }
+        return price3;
+}

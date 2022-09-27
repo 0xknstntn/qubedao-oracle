@@ -8,35 +8,34 @@
 #include "storage.func";
 #include "utils.func";
 #include "get.func";
-
+#include "math.func";
 ;;(cell, slice) recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body, slice sender_address) impure { ;; for test
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
 	(int price, int time, slice admin, slice provider) = storage::load_data();
 	slice sender_address = utils::parse_sender_address(in_msg_full);
+	if(equal_slices(sender_address, admin)){
+		int op = in_msg_body~load_uint(32);
+		int query_id = in_msg_body~load_uint(64);
+		if(op == 10){
+			storage::save_price(price, time, admin, in_msg_body~load_msg_addr());
+			return ();
+		}
+		if(op == 20){
+			storage::save_price(price, time, in_msg_body~load_msg_addr(), provider);
+			return ();
+		}
+	}
 	if(equal_slices(provider, sender_address)){
 		int op = in_msg_body~load_uint(32);
 		int query_id = in_msg_body~load_uint(64);
 		if(op == 1){
-			int price = 0;
-			int index = in_msg_body~load_uint(32);
-			repeat(index){
-				int old_price = in_msg_body~load_uint(64);
-				int next_price = in_msg_body~load_uint(64);
-				;;~dump([old_price, next_price, (next_price - old_price), ((next_price - old_price) < 100000000)]);
-				if((((next_price - old_price) < 10000000))) { 
-					price = price + next_price;
-				}
-				if(((next_price - old_price) < -10000000)){
-					price = price + next_price;
-				}
-				{-if((next_price < old_price) & ((old_price - next_price) <= 100000000)){
-					price = old_price;
-				}-}
-
-			}
-			;;~dump(price / index);
-			storage::save_price((price / index), now(), admin, provider);
-			;;return (utils::get_null_cell(), utils::get_null_slice()); ;; for test
+			in_msg_body~load_uint(32);
+			int price0 = in_msg_body~load_uint(64);
+			int price1 = in_msg_body~load_uint(64);
+			int price2 = in_msg_body~load_uint(64);
+			int price3 = in_msg_body~load_uint(64);
+			int price = get_price(unsafe_tuple([price0, price1, price2, price3]));
+			storage::save_price(price, now(), admin, provider);
 			return ();
 		}
 	} else {
