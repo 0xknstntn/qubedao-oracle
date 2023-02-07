@@ -27,39 +27,33 @@ async function get_actual_price_coinbase(){
         var price = await fetch('https://api.coinbase.com/v2/exchange-rates?currency=TON') //oracle using for get actual price for TON/USD
         price = await price.json();
         var actual_price = price.data.rates.USD
-        return (parseFloat(actual_price) * 10**9)
+        return parseInt(parseFloat(actual_price) * 10**9)
 }
 
 async function get_actual_price_ftx(){
         var price = await fetch('https://ftx.com/api/markets') //oracle using for get actual price for TON/USD
         price = await price.json();
         var actual_price = price.result[557].bid
-        return (parseFloat(actual_price) * 10**9)
+        return parseInt(parseFloat(actual_price) * 10**9)
 }
 
 async function get_actual_price_huobi(){
-        var price = await fetch('https://api.coinbase.com/v2/exchange-rates?currency=TON') //oracle using for get actual price for TON/USD
+        var price = await fetch('https://api.huobi.pro/market/depth?symbol=tonusdt&type=step0') //oracle using for get actual price for TON/USD
         price = await price.json();
-        var actual_price = price.tick.bid[0]
-        return (parseFloat(actual_price) * 10**9)
+        var actual_price = price.tick.bids[0][0]
+        //return actual_price
+        return parseInt(parseFloat(actual_price) * 10**9)
+}
+
+async function get_actual_price_coingecko(){
+        var price = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd") //oracle using for get actual price for TON/USD
+        price = await price.json()
+        var actual_price = price["the-open-network"].usd
+        return parseInt(parseFloat(actual_price) * 10**9)
 }
 
 function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function notification_body() {
-        const cell = new Cell();
-        cell.bits.writeUint(5100, 32)
-        cell.bits.writeUint(0, 64)
-        //return (TonWeb.utils.bytesToBase64(await cell.toBoc(false))).toString(); //idk what this dont work, but he return te6cckEBAQEADgAAGAAAE+wAAAAAAAAAAAp4n8I=
-        return 'te6ccgEBAQEADgAAGAAAE+wAAAAAAAAAAA=='
-}
-
-async function update_price() {
-        const cell = new Cell();
-        cell.bits.writeUint(1, 32)
-        return (TonWeb.utils.bytesToBase64(await cell.toBoc(false))).toString();
 }
 
 async function getTime() {
@@ -86,11 +80,11 @@ async function send_update(wallet, keyPair){
         const cell = new Cell();
         cell.bits.writeUint(1, 32)
         cell.bits.writeUint(0, 64)
-        cell.bits.writeUint(2, 32)
-        cell.bits.writeUint(get_actual_price_coinbase(), 64)
-        cell.bits.writeUint(get_actual_price_ftx(), 64)
-        cell.bits.writeUint(get_actual_price_huobi(), 64)
-        console.log(clc.red('WARNING'), `[${await getTime()}]`, 'SEND UPDATE', 'ACTUAL PRICE =', (price / 10**9))
+        cell.bits.writeUint(await get_actual_price_coinbase(), 64)
+        cell.bits.writeUint(await get_actual_price_ftx(), 64)
+        cell.bits.writeUint(await get_actual_price_huobi(), 64)
+        cell.bits.writeUint(await get_actual_price_coingecko(), 64)
+        console.log(clc.red('WARNING'), `[${await getTime()}]`, 'SEND UPDATE')
         await send(wallet, cell, keyPair)
 }
 
@@ -113,10 +107,10 @@ async function main(net) {
         console.log(clc.green('INFO'), ` [${await getTime()}]`,  'Starting ton-link node...');
         console.log(clc.green('INFO'), ` [${await getTime()}]`,  'Starting API...');
         console.log(clc.yellow('CHECK'), `[${await getTime()}]`, 'Connect to TONCENTER =',clc.green((await tonweb.provider.getWalletInfo(walletAddress.toString(true, true, true))).wallet));
-        console.log(clc.yellow('CHECK'), `[${await getTime()}]`, 'Connect to TONAPI =',clc.green((await (await fetch(`https://testnet.tonapi.io/v1/blockchain/getAccount?account=${walletAddress.toString(true, true, true)}`)).json()).status));
+        console.log(clc.yellow('CHECK'), `[${await getTime()}]`, 'Connect to TONAPI =',clc.green((await (await fetch(`https://tonapi.io/v1/blockchain/getAccount?account=${walletAddress.toString(true, true, true)}`)).json()).status));
 	console.log(clc.green('INFO'), ` [${await getTime()}]`, 'Usint wallet =', clc.green(walletAddress.toString(true, true, true)));
         console.log(clc.green('INFO'), ` [${await getTime()}]`, 'Using ton-link oracle =', clc.green((process.env).ORACLEADDRESS));
-        console.log(clc.yellow('CHECK'), `[${await getTime()}]`, 'Check ton-link oracle =',clc.green((await (await fetch(`https://testnet.tonapi.io/v1/blockchain/getAccount?account=${(process.env).ORACLEADDRESS}`)).json()).status));
+        console.log(clc.yellow('CHECK'), `[${await getTime()}]`, 'Check ton-link oracle =',clc.green((await (await fetch(`https://tonapi.io/v1/blockchain/getAccount?account=${(process.env).ORACLEADDRESS}`)).json()).status));
         console.log(clc.green('INFO'), ` [${await getTime()}]`, '---------------------------------------------------------------------------------------------------------------------------------------------------------')
 
         app.get('/v1/update', async function(req, res){
